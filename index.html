@@ -25,7 +25,7 @@
     }
 
     header {
-      background: #2e7d32;
+      background: #2e7d32; /* VERDE */
       color: white;
       padding: 16px 24px 10px;
       text-align: center;
@@ -113,12 +113,10 @@
       position: sticky;
       top: 0;
       z-index: 10;
-      background: #dde3ff;
+      background: #c8e6c9; /* verde clarito */
       border: 1px solid #ccc;
       padding: 4px 6px;
       text-align: center;
-      white-space: normal;
-      word-break: break-word;
     }
 
     th,
@@ -126,50 +124,32 @@
       border: 1px solid #ccc;
       padding: 4px 6px;
       text-align: center;
-      white-space: normal;
-      word-break: break-word;
     }
 
     thead th:nth-child(1),
     tbody td:nth-child(1) {
       width: var(--col-date-width);
-      min-width: var(--col-date-width);
-      max-width: var(--col-date-width);
     }
 
     thead th:nth-child(2),
     tbody td:nth-child(2) {
       width: var(--col-session-width);
-      min-width: var(--col-session-width);
-      max-width: var(--col-session-width);
     }
 
-    thead th:nth-child(1) {
-      position: sticky;
-      left: 0;
-      z-index: 11;
-      background: #dde3ff;
-    }
-
-    thead th:nth-child(2) {
-      position: sticky;
-      left: var(--col-date-width);
-      z-index: 11;
-      background: #dde3ff;
-    }
-
+    thead th:nth-child(1),
     tbody td:nth-child(1) {
       position: sticky;
       left: 0;
       z-index: 11;
-      background: #fff;
+      background: #ffffff;
     }
 
+    thead th:nth-child(2),
     tbody td:nth-child(2) {
       position: sticky;
       left: var(--col-date-width);
       z-index: 11;
-      background: #fff;
+      background: #ffffff;
     }
 
     tbody tr.day-a td {
@@ -177,18 +157,17 @@
     }
 
     tbody tr.day-b td {
-      background: #dde3ff;
+      background: #e8f5e9; /* verde ultra suave */
     }
 
     td.reservable {
       cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease;
+      transition: background 0.15s ease;
       position: relative;
-      overflow: hidden;
     }
 
     td.reservable:hover {
-      box-shadow: inset 0 0 0 2px #1f4e79;
+      box-shadow: inset 0 0 0 2px #2e7d32;
     }
 
     td.reserved {
@@ -197,9 +176,8 @@
       font-weight: 700;
     }
 
-    /* Reservas fijas del horario (no clicables) */
     td.fixed-reserved {
-      background: #b71c1c !important;
+      background: #1b5e20 !important; /* verde oscuro */
       color: #ffffff;
       font-weight: 700;
       cursor: default;
@@ -216,9 +194,6 @@
       pointer-events: none;
       text-align: center;
       width: 100%;
-      padding: 0 4px;
-      box-sizing: border-box;
-      line-height: 1.2;
     }
 
     td.reserved::before {
@@ -236,591 +211,430 @@
     }
   </style>
 </head>
-<body>
-  <!-- Barra superior fija -->
-  <div class="top-bar">
-    <header>
-      <h1>RESERVA DE AULA DE INFORMÁTICA</h1>
-    </header>
 
-    <div class="controls">
-      <div>
-        <label for="monthSelect">Mes:</label>
-        <select id="monthSelect"></select>
-      </div>
-      <div class="legend">
-        <span class="legend-item">
-          <span class="legend-color free"></span> Libre
-        </span>
-        <span class="legend-item">
-          <span class="legend-color reserved"></span> Reservado
-        </span>
-        <span>Haz doble clic o doble toque para reservar / liberar.</span>
-      </div>
+<body>
+
+<div class="top-bar">
+  <header>
+    <h1>RESERVA DE AULA DE INFORMÁTICA</h1>
+  </header>
+
+  <div class="controls">
+    <div>
+      <label for="monthSelect">Mes:</label>
+      <select id="monthSelect"></select>
+    </div>
+
+    <div class="legend">
+      <span class="legend-item"><span class="legend-color free"></span> Libre</span>
+      <span class="legend-item"><span class="legend-color reserved"></span> Reservado</span>
+      <span> Doble clic para reservar / liberar</span>
     </div>
   </div>
+</div>
 
-  <main>
-    <div class="table-container">
-      <table id="calendarTable">
-        <!-- Cabecera y cuerpo se generan por JS -->
-      </table>
-    </div>
+<main>
+  <div class="table-container">
+    <table id="calendarTable"></table>
+  </div>
 
-    <p class="info">
-      * Las reservas pueden cambiarse o cancelarse durante un máximo de 2 minutos desde el momento en que se realizan.
-    </p>
-    <p class="info">
-      * En cada periodo de 24 horas solo se puede realizar una reserva por semana (máximo 1 reserva por semana natural en ese intervalo).
-    </p>
-  </main>
+  <p class="info">
+    * Las reservas pueden modificarse durante 2 minutos después de realizarse.
+  </p>
+  <p class="info">
+    * En cada periodo de 24 horas solo se puede realizar una reserva por semana natural.
+  </p>
+</main>
 
-  <!-- JS con Firestore -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore,
-      doc,
-      onSnapshot,
-      setDoc,
-      deleteField
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script type="module">
+/* =============== FIREBASE =============== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  onSnapshot,
+  setDoc,
+  deleteField
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // ⏱ TIEMPO MÁXIMO PARA DESHACER (ms) → ahora 2 minutos
-    const UNRESERVE_WINDOW_MS = 2 * 60 * 1000;
+const UNRESERVE_WINDOW_MS = 2 * 60 * 1000;
+const USER_RESERVATION_TTL_MS = 24 * 60 * 60 * 1000;
 
-    // ⏱ TIEMPO MÁXIMO DE BLOQUEO POR DISPOSITIVO (24h)
-    const USER_RESERVATION_TTL_MS = 24 * 60 * 60 * 1000;
+const firebaseConfig = {
+  apiKey: "AIzaSyD5EAMg-0p54f8bPq8SVdZ_ePg5Xso3cmg",
+  authDomain: "arm1-acbba.firebaseapp.com",
+  projectId: "arm1-acbba",
+  storageBucket: "arm1-acbba.firebasestorage.app",
+  messagingSenderId: "408825932019",
+  appId: "1:408825932019:web:10f2079b590b4c9ca3af86",
+  measurementId: "G-S78TM6PVRL"
+};
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyD5EAMg-0p54f8bPq8SVdZ_ePg5Xso3cmg",
-      authDomain: "arm1-acbba.firebaseapp.com",
-      projectId: "arm1-acbba",
-      storageBucket: "arm1-acbba.firebasestorage.app",
-      messagingSenderId: "408825932019",
-      appId: "1:408825932019:web:10f2079b590b4c9ca3af86",
-      measurementId: "G-S78TM6PVRL"
-    };
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
+/* =============== CONFIGURACIÓN =============== */
 
-    const months = [
-      { year: 2025, month: 11, name: "Noviembre 2025" },
-      { year: 2025, month: 12, name: "Diciembre 2025" },
-      { year: 2026, month: 1, name: "Enero 2026" },
-      { year: 2026, month: 2, name: "Febrero 2026" },
-      { year: 2026, month: 3, name: "Marzo 2026" },
-      { year: 2026, month: 4, name: "Abril 2026" },
-      { year: 2026, month: 5, name: "Mayo 2026" },
-      { year: 2026, month: 6, name: "Junio 2026" }
-    ];
+const months = [
+  { year: 2025, month: 11, name: "Noviembre 2025" },
+  { year: 2025, month: 12, name: "Diciembre 2025" },
+  { year: 2026, month: 1, name: "Enero 2026" },
+  { year: 2026, month: 2, name: "Febrero 2026" },
+  { year: 2026, month: 3, name: "Marzo 2026" },
+  { year: 2026, month: 4, name: "Abril 2026" },
+  { year: 2026, month: 5, name: "Mayo 2026" },
+  { year: 2026, month: 6, name: "Junio 2026" }
+];
 
-    const classes = [
-      "Infantil 3 años",
-      "Infantil 4 años",
-      "Infantil 5 años",
-      "1ºA",
-      "2ºA",
-      "3ºA",
-      "4ºA",
-      "4ºB",
-      "5ºA",
-      "5ºB",
-      "6ºA",
-      "6ºB"
-    ];
+const classes = [
+  "Infantil 3 años", "Infantil 4 años", "Infantil 5 años",
+  "1ºA", "2ºA", "3ºA", "4ºA", "4ºB",
+  "5ºA", "5ºB", "6ºA", "6ºB"
+];
 
-    // Horarios normales (nov–may)
-    const defaultSlots = [
-      "9:00-9:45",   // 1ª
-      "9:45-10:30",  // 2ª
-      "10:30-11:15", // 3ª
-      "11:45-12:30", // 4ª
-      "12:30-13:15", // 5ª
-      "13:15-14:00"  // 6ª
-    ];
+const defaultSlots = [
+  "9:00-9:45",
+  "9:45-10:30",
+  "10:30-11:15",
+  "11:45-12:30",
+  "12:30-13:15",
+  "13:15-14:00"
+];
 
-    // Horarios especiales para JUNIO 2026 (solo 5 sesiones)
-    const juneSlots = [
-      "9:00-9:40",
-      "9:40-10:20",
-      "10:20-11:00",
-      "11:30-12:15",
-      "12:15-13:00"
-    ];
+const juneSlots = [
+  "9:00-9:40",
+  "9:40-10:20",
+  "10:20-11:00",
+  "11:30-12:15",
+  "12:15-13:00"
+];
 
-    function getSlotsForMonth(monthIndex) {
-      const { year, month } = months[monthIndex];
-      if (year === 2026 && month === 6) {
-        // En junio solo hay 5 sesiones.
-        return juneSlots;
-      }
-      return defaultSlots;
+/* =============== RESERVAS FIJAS (CORREGIDAS) =============== */
+
+const FIXED_WEEKLY_RESERVATIONS = [
+
+  /* Sesión 1 */
+  { weekday: 5, session: 1, className: "2ºA" }, // viernes
+
+  /* Sesión 4 */
+  { weekday: 3, session: 4, className: "3ºA" }, // miércoles
+  { weekday: 4, session: 4, className: "5ºA" }, // jueves
+  { weekday: 5, session: 4, className: "4ºB" }, // viernes
+
+  /* Sesión 5 */
+  { weekday: 1, session: 5, className: "4ºA" }, // lunes
+  { weekday: 2, session: 5, className: "6ºB" }, // martes
+  { weekday: 3, session: 5, className: "1ºA" }, // miércoles
+  { weekday: 4, session: 5, className: "3ºA" }, // jueves
+
+  /* Sesión 6 */
+  { weekday: 1, session: 6, className: "4ºB" }, // lunes
+  { weekday: 2, session: 6, className: "5ºB" }, // martes
+  { weekday: 3, session: 6, className: "4ºB" }, // miércoles
+  { weekday: 4, session: 6, className: "6ºA" }  // jueves
+];
+
+/* =============== FUNCIÓN: HORAS POR MES =============== */
+
+function getSlotsForMonth(idx) {
+  const { year, month } = months[idx];
+  return (year === 2026 && month === 6) ? juneSlots : defaultSlots;
+}
+
+function isFixedReservation(dateIso, slot, className) {
+  const d = new Date(dateIso);
+  const weekday = d.getDay(); // 1=Lun ... 5=Vie
+  if (weekday < 1 || weekday > 5) return false;
+
+  const slots = getSlotsForMonth(currentMonthIndex);
+  const session = slots.indexOf(slot) + 1;
+
+  return FIXED_WEEKLY_RESERVATIONS.some(
+    f => f.weekday === weekday && f.session === session && f.className === className
+  );
+}
+
+function getFixedReservationForSlot(dateIso, slot) {
+  const d = new Date(dateIso);
+  const weekday = d.getDay();
+  if (weekday < 1 || weekday > 5) return null;
+
+  const slots = getSlotsForMonth(currentMonthIndex);
+  const session = slots.indexOf(slot) + 1;
+
+  return FIXED_WEEKLY_RESERVATIONS.find(
+    f => f.weekday === weekday && f.session === session
+  );
+}
+
+/* =============== FIRESTORE =============== */
+
+function monthDocRef(i) {
+  const { year, month } = months[i];
+  const id = `${year}-${String(month).padStart(2, "0")}`;
+  return doc(db, "reservas_aula_informatica_celdas", id);
+}
+
+/* =============== SEMANAS ISO (PARA LÍMITE 24H) =============== */
+
+const LOCAL_KEY = "reservas_aula_informatica_por_semana";
+
+function getISOWeek(date) {
+  const tmp = new Date(date);
+  tmp.setHours(0, 0, 0, 0);
+
+  tmp.setDate(tmp.getDate() + 4 - (tmp.getDay() || 7));
+
+  const yearStart = new Date(tmp.getFullYear(), 0, 1);
+  const week = Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
+
+  return { year: tmp.getFullYear(), week };
+}
+
+function weekKeyFromISO(dateIso) {
+  const d = new Date(dateIso);
+  const { year, week } = getISOWeek(d);
+  return `${year}-W${String(week).padStart(2, "0")}`;
+}
+
+function loadWeekMap() {
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_KEY)) || {};
+  } catch { return {}; }
+}
+
+function saveWeekMap(map) {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(map));
+}
+
+function cleanExpiredWeeks() {
+  const now = Date.now();
+  const map = loadWeekMap();
+  let changed = false;
+
+  for (const k in map) {
+    if (now - map[k].time > USER_RESERVATION_TTL_MS) {
+      delete map[k];
+      changed = true;
     }
+  }
 
-    /* === RESERVAS FIJAS AULA INFORMÁTICA 25/26 ===
-       weekday: 1=Lunes (DILLUNS) ... 5=Viernes (DIVENDRES)
-       session: 1=1ª, 2=2ª,... 6=6ª
-       (ENG ignorado, usamos solo la clase)
-    */
-    const FIXED_WEEKLY_RESERVATIONS = [
-      // 1ª
-      { weekday: 5, session: 1, className: "2ºA" }, // Viernes 1ª: 2A ENG
+  if (changed) saveWeekMap(map);
+  return map;
+}
 
-      // 4ª
-      { weekday: 3, session: 4, className: "3ºA" }, // Miércoles 4ª: 3A ENG
-      { weekday: 4, session: 4, className: "5ºA" }, // Jueves 4ª: 5A
-      { weekday: 5, session: 4, className: "4ºB" }, // Viernes 4ª: 4B ENG
+function getUserWeekInfo(weekKey) {
+  const map = cleanExpiredWeeks();
+  return map[weekKey] || null;
+}
 
-      // 5ª
-      { weekday: 2, session: 5, className: "4ºA" }, // Martes 5ª: 4A ENG
-      { weekday: 3, session: 5, className: "6ºB" }, // Miércoles 5ª: 6B
-      { weekday: 4, session: 5, className: "1ºA" }, // Jueves 5ª: 1A
-      { weekday: 5, session: 5, className: "3ºA" }, // Viernes 5ª: 3A
+function addUserWeek(weekKey, fullId, time) {
+  const map = cleanExpiredWeeks();
+  map[weekKey] = { fullId, time };
+  saveWeekMap(map);
+}
 
-      // 6ª
-      { weekday: 2, session: 6, className: "4ºB" }, // Martes 6ª: 4B ENG
-      { weekday: 3, session: 6, className: "5ºB" }, // Miércoles 6ª: 5B
-      { weekday: 4, session: 6, className: "4ºB" }, // Jueves 6ª: 4B
-      { weekday: 5, session: 6, className: "6ºA" }  // Viernes 6ª: 6A
-    ];
+function removeUserWeek(fullId) {
+  const map = cleanExpiredWeeks();
+  for (const k in map) {
+    if (map[k].fullId === fullId) delete map[k];
+  }
+  saveWeekMap(map);
+}
 
-    function isFixedReservation(dateIso, slot, className) {
-      const d = new Date(dateIso);
-      const weekday = d.getDay(); // 1=lunes … 5=viernes
-      if (weekday < 1 || weekday > 5) return false;
+/* =============== UI Y RENDERIZADO =============== */
 
-      const slotsForMonth = getSlotsForMonth(currentMonthIndex);
-      const idx = slotsForMonth.indexOf(slot);
-      if (idx === -1) return false;
-      const session = idx + 1;
+const monthSelect = document.getElementById("monthSelect");
+const calendarTable = document.getElementById("calendarTable");
 
-      return FIXED_WEEKLY_RESERVATIONS.some(
-        r => r.weekday === weekday && r.session === session && r.className === className
-      );
+let currentMonthIndex = 0;
+let currentData = {};
+let unsubscribe = null;
+
+months.forEach((m, i) => {
+  const opt = document.createElement("option");
+  opt.value = i;
+  opt.textContent = m.name;
+  monthSelect.appendChild(opt);
+});
+
+monthSelect.addEventListener("change", () => {
+  subscribeToMonth(parseInt(monthSelect.value));
+});
+
+function subscribeToMonth(i) {
+  if (unsubscribe) unsubscribe();
+  currentMonthIndex = i;
+
+  const ref = monthDocRef(i);
+  unsubscribe = onSnapshot(ref, snap => {
+    currentData = snap.exists() ? snap.data() : {};
+    renderMonth(i);
+  });
+}
+
+function getWeekdays(year, month) {
+  const days = [];
+  const date = new Date(year, month - 1, 1);
+
+  while (date.getMonth() === month - 1) {
+    const dow = date.getDay();
+    if (dow >= 1 && dow <= 5) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      days.push({ iso: `${y}-${m}-${d}`, label: `${d}/${m}/${y}` });
     }
+    date.setDate(date.getDate() + 1);
+  }
+  return days;
+}
 
-    // Devuelve si una franja (fecha+slot) está ocupada por una reserva fija, aunque sea otra clase
-    function getFixedReservationForSlot(dateIso, slot) {
-      const d = new Date(dateIso);
-      const weekday = d.getDay();
-      if (weekday < 1 || weekday > 5) return null;
+function renderMonth(i) {
+  const { year, month } = months[i];
+  const days = getWeekdays(year, month);
+  const slots = getSlotsForMonth(i);
 
-      const slotsForMonth = getSlotsForMonth(currentMonthIndex);
-      const idx = slotsForMonth.indexOf(slot);
-      if (idx === -1) return null;
-      const session = idx + 1;
+  calendarTable.innerHTML = "";
 
-      const r = FIXED_WEEKLY_RESERVATIONS.find(
-        x => x.weekday === weekday && x.session === session
-      );
-      return r || null;
-    }
+  const thead = document.createElement("thead");
+  const tr = document.createElement("tr");
 
-    const monthSelect    = document.getElementById("monthSelect");
-    const calendarTable  = document.getElementById("calendarTable");
+  ["Fecha", "Sesión", ...classes].forEach(txt => {
+    const th = document.createElement("th");
+    th.textContent = txt;
+    tr.appendChild(th);
+  });
 
-    let currentMonthIndex = 0;
-    let currentData = {};
-    let unsubscribe = null;
+  thead.appendChild(tr);
+  calendarTable.appendChild(thead);
 
-    function getCurrentDocId() {
-      const { year, month } = months[currentMonthIndex];
-      return `${year}-${String(month).padStart(2, "0")}`;
-    }
+  const tbody = document.createElement("tbody");
+  let alt = false;
 
-    function monthDocRef(monthIndex) {
-      const { year, month } = months[monthIndex];
-      const id = `${year}-${String(month).padStart(2, "0")}`;
-      // Colección específica para el aula de informática:
-      return doc(db, "reservas_aula_informatica_celdas", id);
-    }
+  days.forEach(day => {
+    alt = !alt;
+    const rowClass = alt ? "day-a" : "day-b";
 
-    function buildReservationId(dateIso, slot, className) {
-      return `${dateIso}__${slot}__${className}`;
-    }
+    slots.forEach(slot => {
+      const tr = document.createElement("tr");
+      tr.classList.add(rowClass);
 
-    function subscribeToMonth(monthIndex) {
-      if (unsubscribe) {
-        unsubscribe();
-        unsubscribe = null;
-      }
-      currentMonthIndex = monthIndex;
+      const tdDay = document.createElement("td");
+      tdDay.textContent = day.label;
+      tr.appendChild(tdDay);
 
-      const ref = monthDocRef(monthIndex);
-      unsubscribe = onSnapshot(ref, (snap) => {
-        currentData = snap.exists() ? snap.data() : {};
-        renderMonth(monthIndex);
-      });
-    }
+      const tdSlot = document.createElement("td");
+      tdSlot.textContent = slot;
+      tr.appendChild(tdSlot);
 
-    async function setReservationValue(id, value) {
-      const ref = monthDocRef(currentMonthIndex);
-      const update = {};
-      update[id] = value;
-      await setDoc(ref, update, { merge: true });
-    }
+      classes.forEach(cls => {
+        const td = document.createElement("td");
+        td.classList.add("reservable");
+        td.dataset.date = day.iso;
+        td.dataset.slot = slot;
+        td.dataset.class = cls;
 
-    async function clearReservation(id) {
-      const ref = monthDocRef(currentMonthIndex);
-      const update = {};
-      update[id] = deleteField();
-      await setDoc(ref, update, { merge: true });
-    }
+        const id = `${day.iso}__${slot}__${cls}`;
 
-    // ➜ CONTROL POR USUARIO:
-    // Máx. 1 reserva POR SEMANA (semana ISO) en las últimas 24h
-    // Se guardan en localStorage por semana: { "2025-W45": { fullId, time }, ... }
-    const LOCAL_USER_RES_KEY = "reservas_aula_informatica_mis_reservas_por_semana";
-
-    // Calcula la semana ISO (año-semana) a partir de una fecha YYYY-MM-DD
-    function getWeekKeyFromIso(dateIso) {
-      const [year, month, day] = dateIso.split("-").map(Number);
-      const date = new Date(year, month - 1, day);
-      const { isoYear, week } = getISOYearWeek(date);
-      return `${isoYear}-W${String(week).padStart(2, "0")}`;
-    }
-
-    // Devuelve { isoYear, week } usando semanas ISO (lunes-domingo)
-    function getISOYearWeek(date) {
-      const tmp = new Date(date.valueOf());
-      // Día de la semana con lunes = 0
-      const dayNr = (tmp.getDay() + 6) % 7;
-      // Colocamos la fecha en el jueves de esa semana
-      tmp.setDate(tmp.getDate() - dayNr + 3);
-
-      const isoYear = tmp.getFullYear();
-
-      // Jueves de la primera semana del año ISO
-      const jan4 = new Date(isoYear, 0, 4);
-      const jan4Day = (jan4.getDay() + 6) % 7;
-      jan4.setDate(jan4.getDate() - jan4Day + 3);
-
-      const week = 1 + Math.round((tmp - jan4) / 604800000); // 604800000 = ms en una semana
-      return { isoYear, week };
-    }
-
-    // Lee el mapa de reservas por semana del usuario desde localStorage
-    function getUserReservationsMap() {
-      try {
-        const raw = localStorage.getItem(LOCAL_USER_RES_KEY);
-        if (!raw) return {};
-        const obj = JSON.parse(raw);
-        if (!obj || typeof obj !== "object" || Array.isArray(obj)) return {};
-        return obj;
-      } catch {
-        return {};
-      }
-    }
-
-    // Guarda el mapa de reservas por semana
-    function saveUserReservationsMap(map) {
-      try {
-        localStorage.setItem(LOCAL_USER_RES_KEY, JSON.stringify(map));
-      } catch {
-        // si falla localStorage, no pasa nada
-      }
-    }
-
-    // Devuelve la reserva (si existe y no ha caducado) para una semana concreta
-    function getUserReservationInfoForWeek(weekKey) {
-      const map = getUserReservationsMap();
-      const now = Date.now();
-      let changed = false;
-
-      // Limpiamos reservas caducadas (> 24h)
-      for (const wk in map) {
-        const info = map[wk];
-        if (!info || typeof info.time !== "number") {
-          delete map[wk];
-          changed = true;
-          continue;
+        if (isFixedReservation(day.iso, slot, cls)) {
+          td.classList.add("fixed-reserved");
+          td.dataset.fixed = "true";
+        } else if (currentData[id]) {
+          td.classList.add("reserved");
         }
-        if (now - info.time > USER_RESERVATION_TTL_MS) {
-          delete map[wk];
-          changed = true;
-        }
-      }
 
-      if (changed) {
-        saveUserReservationsMap(map);
-      }
-
-      return map[weekKey] || null;
-    }
-
-    // Añade/actualiza la reserva de una semana
-    function addUserReservationForWeek(weekKey, fullId, time) {
-      const map = getUserReservationsMap();
-      map[weekKey] = { fullId, time };
-      saveUserReservationsMap(map);
-    }
-
-    // Elimina del mapa cualquier reserva que tenga ese fullId
-    function removeUserReservationByFullId(fullId) {
-      const map = getUserReservationsMap();
-      let changed = false;
-      for (const wk in map) {
-        if (map[wk] && map[wk].fullId === fullId) {
-          delete map[wk];
-          changed = true;
-        }
-      }
-      if (changed) {
-        saveUserReservationsMap(map);
-      }
-    }
-
-    function buildFullReservationId(id) {
-      const docId = getCurrentDocId();
-      return `${docId}::${id}`;
-    }
-
-    // Devuelve la reserva (si existe) para una fecha + franja, sin importar la clase
-    function getExistingReservationForSlot(dateIso, slot) {
-      const prefix = `${dateIso}__${slot}__`;
-
-      for (const key in currentData) {
-        const value = currentData[key];
-        if (!value) continue; // sin reserva
-
-        if (typeof value === "number" || value === true) {
-          if (key.startsWith(prefix)) {
-            const parts = key.split("__");
-            const cls   = parts[2] || "";
-            return {
-              id: key,
-              className: cls,
-              value
-            };
-          }
-        }
-      }
-
-      // Si no hay en Firestore, miramos si la franja está ocupada por una reserva fija
-      const fixed = getFixedReservationForSlot(dateIso, slot);
-      if (fixed) {
-        return {
-          id: null,
-          className: fixed.className,
-          value: "fixed"
-        };
-      }
-
-      return null;
-    }
-
-    // Selector de meses
-    months.forEach((m, index) => {
-      const opt = document.createElement("option");
-      opt.value = index;
-      opt.textContent = m.name;
-      monthSelect.appendChild(opt);
-    });
-
-    monthSelect.addEventListener("change", () => {
-      const idx = parseInt(monthSelect.value, 10);
-      subscribeToMonth(idx);
-    });
-
-    // Obtener días lectivos
-    function getWeekdays(year, month) {
-      const days = [];
-      const date = new Date(year, month - 1, 1);
-      while (date.getMonth() === month - 1) {
-        const day = date.getDay(); // 0=Dom, 1=Lun,...,6=Sab
-        if (day >= 1 && day <= 5) {
-          const d = String(date.getDate()).padStart(2, "0");
-          const m = String(month).padStart(2, "0");
-          const y = year;
-          days.push({
-            iso: `${y}-${m}-${d}`,
-            label: `${d}/${m}/${y}`
-          });
-        }
-        date.setDate(date.getDate() + 1);
-      }
-      return days;
-    }
-
-    function renderMonth(monthIndex) {
-      const { year, month } = months[monthIndex];
-      const days = getWeekdays(year, month);
-      const slotsForMonth = getSlotsForMonth(monthIndex);
-      const saved = currentData || {};
-
-      calendarTable.innerHTML = "";
-
-      // CABECERA (thead)
-      const thead = document.createElement("thead");
-      const headerRow = document.createElement("tr");
-      const labels = ["Fecha", "Sesión", ...classes];
-      labels.forEach(text => {
-        const th = document.createElement("th");
-        th.textContent = text;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-      calendarTable.appendChild(thead);
-
-      // CUERPO (tbody)
-      const tbody = document.createElement("tbody");
-
-      let useAlt = false; // alterna colores por día
-
-      days.forEach(day => {
-        useAlt = !useAlt;
-        const dayClass = useAlt ? "day-a" : "day-b";
-
-        slotsForMonth.forEach(slot => {
-          const tr = document.createElement("tr");
-          tr.classList.add(dayClass);
-
-          const tdFecha = document.createElement("td");
-          tdFecha.textContent = day.label;
-          tr.appendChild(tdFecha);
-
-          const tdSlot = document.createElement("td");
-          tdSlot.textContent = slot;
-          tr.appendChild(tdSlot);
-
-          classes.forEach(cls => {
-            const td = document.createElement("td");
-            td.classList.add("reservable");
-            td.dataset.date = day.iso;
-            td.dataset.slot = slot;
-            td.dataset.class = cls; // usado para la marca de agua
-
-            const id = buildReservationId(day.iso, slot, cls);
-            const isFixed = isFixedReservation(day.iso, slot, cls);
-
-            if (isFixed) {
-              // reserva fija del horario → siempre ocupada y no clicable
-              td.classList.add("fixed-reserved");
-              td.dataset.fixed = "true";
-            } else if (saved[id]) {
-              td.classList.add("reserved");
-            }
-
-            tr.appendChild(td);
-          });
-
-          tbody.appendChild(tr);
-        });
+        tr.appendChild(td);
       });
 
-      calendarTable.appendChild(tbody);
-    }
-
-    // 🧠 LÓGICA DE RESERVA / LIBERACIÓN CON DOBLE CLIC / DOBLE TOQUE
-    const DOUBLE_CLICK_MS = 400;
-    let lastCellId = null;
-    let lastClickTime = 0;
-
-    async function activarCelda(cell) {
-      // Si es una reserva fija del horario, no hacemos nada
-      if (cell.dataset.fixed === "true") {
-        alert("Esta franja horaria está reservada de forma fija en el horario y no se puede modificar.");
-        return;
-      }
-
-      const { date, slot, class: className } = cell.dataset;
-      const id = buildReservationId(date, slot, className);
-      const fullId = buildFullReservationId(id);
-
-      const value = currentData[id];   // puede ser undefined, true o timestamp (number)
-      const now   = Date.now();
-
-      // Si NO hay reserva en esta celda → queremos crear una nueva
-      if (!value) {
-        // 1) Comprobar si el usuario YA tiene una reserva activa
-        // en esta MISMA semana (ISO) en las últimas 24h
-        const weekKey = getWeekKeyFromIso(date);
-        let userInfo = getUserReservationInfoForWeek(weekKey);
-
-        if (userInfo) {
-          // Desglosamos la reserva guardada: docId::resId
-          const [docId, resId] = userInfo.fullId.split("::");
-
-          // Si la reserva guardada corresponde al documento (mes) actual,
-          // comprobamos si REALMENTE sigue existiendo en Firestore
-          if (docId === getCurrentDocId()) {
-            const stillExists = currentData && currentData[resId];
-
-            // Si ya no existe, borramos la marca local de esa semana
-            if (!stillExists) {
-              removeUserReservationByFullId(userInfo.fullId);
-              userInfo = null;
-            }
-          }
-        }
-
-        if (userInfo) {
-          alert("Ya tienes una reserva activa esta semana en las últimas 24 horas.");
-          return;
-        }
-
-        // 2) Comprobar si la franja ya está ocupada por otra clase o por una reserva fija
-        const existing = getExistingReservationForSlot(date, slot);
-        if (existing) {
-          const reservedClass = existing.className || "otra clase";
-          alert(`No puedes reservar esta franja horaria porque ya está reservada por ${reservedClass}.`);
-          return;
-        }
-
-        // 3) La franja está libre → crear reserva con timestamp (ms)
-        await setReservationValue(id, now);
-
-        // guardar la reserva del usuario en localStorage para ESA semana
-        const newWeekKey = getWeekKeyFromIso(date);
-        addUserReservationForWeek(newWeekKey, fullId, now);
-        return;
-      }
-
-      // Si es un número, es un timestamp → comprobamos ventana de tiempo para DESHACER
-      if (typeof value === "number") {
-        const elapsed = now - value;
-        if (elapsed <= UNRESERVE_WINDOW_MS) {
-          await clearReservation(id);
-          // si esta reserva era alguna de las guardadas del usuario, la eliminamos del mapa
-          removeUserReservationByFullId(fullId);
-        } else {
-          alert("Esta reserva ya no se puede modificar.");
-        }
-        return;
-      }
-
-      // Compatibilidad con reservas antiguas (valor true): se permite borrar siempre
-      if (value === true) {
-        await clearReservation(id);
-        removeUserReservationByFullId(fullId);
-        return;
-      }
-    }
-
-    calendarTable.addEventListener("click", (event) => {
-      const cell = event.target.closest("td.reservable");
-      if (!cell) return;
-
-      const uniqueId = `${cell.dataset.date}__${cell.dataset.slot}__${cell.dataset.class}`;
-      const now = Date.now();
-
-      if (lastCellId === uniqueId && (now - lastClickTime) <= DOUBLE_CLICK_MS) {
-        // Doble clic / doble toque → activar
-        activarCelda(cell);
-        lastCellId = null;
-        lastClickTime = 0;
-      } else {
-        // Primer clic → solo marcar el tiempo
-        lastCellId = uniqueId;
-        lastClickTime = now;
-      }
+      tbody.appendChild(tr);
     });
+  });
 
-    // Inicializar
-    monthSelect.value = "0";
-    subscribeToMonth(0);
-  </script>
+  calendarTable.appendChild(tbody);
+}
+
+/* =============== ACCIÓN: RESERVAR / LIBERAR =============== */
+
+const DOUBLE_CLICK_TIME = 400;
+let lastClickId = null;
+let lastClickTime = 0;
+
+calendarTable.addEventListener("click", e => {
+  const cell = e.target.closest("td.reservable");
+  if (!cell) return;
+
+  const id = `${cell.dataset.date}__${cell.dataset.slot}__${cell.dataset.class}`;
+  const now = Date.now();
+
+  if (lastClickId === id && now - lastClickTime <= DOUBLE_CLICK_TIME) {
+    activarCelda(cell);
+    lastClickId = null;
+  } else {
+    lastClickId = id;
+    lastClickTime = now;
+  }
+});
+
+async function activarCelda(cell) {
+  if (cell.dataset.fixed === "true") {
+    alert("Esta franja está reservada de forma fija.");
+    return;
+  }
+
+  const date = cell.dataset.date;
+  const slot = cell.dataset.slot;
+  const cls = cell.dataset.class;
+  const id = `${date}__${slot}__${cls}`;
+  const fullId = `${months[currentMonthIndex].year}-${String(months[currentMonthIndex].month).padStart(2,"0")}::${id}`;
+  const value = currentData[id];
+  const now = Date.now();
+
+  /* Crear reserva */
+  if (!value) {
+    const wKey = weekKeyFromISO(date);
+    const userInfo = getUserWeekInfo(wKey);
+
+    if (userInfo) {
+      alert("Ya tienes una reserva esta semana en las últimas 24h.");
+      return;
+    }
+
+    const existing = getExistingReservationForSlot(date, slot);
+    if (existing) {
+      alert(`Ya reservada por ${existing.className}.`);
+      return;
+    }
+
+    await setReservationValue(id, now);
+    addUserWeek(wKey, fullId, now);
+    return;
+  }
+
+  /* Borrar reserva (si está dentro del tiempo) */
+  if (typeof value === "number") {
+    if (now - value <= UNRESERVE_WINDOW_MS) {
+      await clearReservation(id);
+      removeUserWeek(fullId);
+    } else {
+      alert("No se puede modificar esta reserva.");
+    }
+    return;
+  }
+
+  /* Reservas antiguas */
+  if (value === true) {
+    await clearReservation(id);
+    removeUserWeek(fullId);
+  }
+}
+
+/* =============== INICIO =============== */
+
+monthSelect.value = "0";
+subscribeToMonth(0);
+
+</script>
+
 </body>
 </html>
